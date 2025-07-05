@@ -3,14 +3,14 @@ use farmauni;
 
 -- Criação da tabela Unidade
 CREATE TABLE Unidade ( 
-codigo_unidade INT PRIMARY KEY, 
+codigo_unidade INT PRIMARY KEY auto_increment, 
 endereco VARCHAR(255), 
 cep VARCHAR(10) 
 );
 
 -- Criação da tabela Funcionario
 CREATE TABLE Funcionario (
-    codigo_funcionario INT PRIMARY KEY,
+    codigo_funcionario INT PRIMARY KEY auto_increment,
     nome VARCHAR(100),
     cargo VARCHAR(50),
     salario DECIMAL(10, 2),
@@ -24,7 +24,7 @@ CREATE TABLE Funcionario (
 
 -- Criação da tabela Medicamento
 CREATE TABLE Medicamento (
-    codigo_medicamento INT PRIMARY KEY,
+    codigo_medicamento INT PRIMARY KEY auto_increment,
     nome VARCHAR(100),
     descricao TEXT,
     laboratorio VARCHAR(100),
@@ -34,7 +34,7 @@ CREATE TABLE Medicamento (
 
 -- Criação da tabela Entrega
 CREATE TABLE Entrega (
-    codigo_entrega INT PRIMARY KEY,
+    codigo_entrega INT PRIMARY KEY auto_increment,
     nome_destinatario VARCHAR(100),
     endereco_destinatario VARCHAR(255),
     telefone_destinatario VARCHAR(15),

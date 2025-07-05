@@ -20,6 +20,8 @@ try:
 except Error as e:
     print(f"Erro ao conectar ao banco de dados: {e}")
 
+cursor = conn.cursor(dictionary=True)
+
 '''
     O menu foi feito de forma mais extensiva para facilitar a criação do código e tabém foi utilizado
     time.sleep para melhor visualização do menu.
@@ -69,7 +71,7 @@ def menu():
             time.sleep(2)
             menu()
         elif opcao == "2":
-            consultar_funcionario()
+            consultar_funcionarios()
             print("\n Você está sendo redirecionado para o menu principal...")
             time.sleep(2)
             menu()
@@ -79,7 +81,7 @@ def menu():
             time.sleep(2)
             menu()
         elif opcao == "4":
-            print("\n Essa opção ainda não está implementada!")
+            atualizar_funcionario()
             print("\n Você está sendo redirecionado para o menu principal...")
             time.sleep(2)
             menu()
@@ -104,7 +106,7 @@ def menu():
             time.sleep(2)
             menu()
         elif opcao == "9":
-            print("\n Essa opção ainda não está implementada!")
+            atualizar_estoque_medicamento()
             print("\n Você está sendo redirecionado para o menu principal...")
             time.sleep(2)
             menu()
@@ -161,25 +163,40 @@ def menu():
 def inserir_funcionario(): 
     cursor = conn.cursor()
     print("\n-- Inserir Funcionário --")
+
     nome = input("Nome: ")
     cargo = input("Cargo: ")
     salario = float(input("Salário: "))
-    cpf = input("CPF: ")
-    email = input("Email: ")
+    cpf = input("CPF (somente números): ")
+    email = input("Email institucional: ")
     telefone = input("Telefone: ")
     nascimento = input("Data de nascimento (YYYY-MM-DD): ")
-    unidade = int(input("Código da unidade de trabalho: "))  
-    sql = dados = (nome, cargo, salario, cpf, email, telefone, nascimento, unidade)
-    cursor.execute(sql, dados)
-    conn.commit()
-    print("Funcionário inserido com sucesso. ID gerado:", cursor.lastrowid)
+    unidade = int(input("Código da unidade de trabalho: "))
+
+    sql = """
+        INSERT INTO Funcionario (
+            nome, cargo, salario, cpf, email_interno, numero_telefone, data_nascimento, unidade_de_trabalho
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+    dados = (nome, cargo, salario, cpf, email, telefone, nascimento, unidade)
+
+    try:
+        cursor.execute(sql, dados)
+        conn.commit()
+        print("Funcionário inserido com sucesso!")
+    except Exception as e:
+        print(f"Erro ao inserir funcionário: {e}")
+    
     cursor.close()
 
-def consultar_funcionario():
+
+def consultar_funcionarios():
     cursor = conn.cursor()
     
     print("\n-- Consultar Funcionário --")
-    codigo = int(input("ID do funcionário a ser atualizado: "))
+    codigo = int(input("ID do funcionário a ser consultado: "))
     sql = "SELECT * FROM Funcionario WHERE codigo_funcionario = %s"
     cursor.execute(sql, (codigo,))
     resultado = cursor.fetchone()  
@@ -221,63 +238,63 @@ def listar_funcionarios():
         print("Nenhum funcionário encontrado.")
 
     cursor.close()
-'''
+
 def atualizar_funcionario():
-    cursor = conn.cursor()
-    
-    while true:
-        print("\n-- Qual campo deseja atualizar? --")
-        print("1. Nome")
-        print("2. Cargo")
-        print("3. Salário")
-        print("4. CPF")
-        print("5. Email")
-        print("6. Telefone")
-        print("7. Data de nascimento")
-        print("8. Unidade de trabalho")
-        print("9. Todos os campos")
-        print("0. Voltar ao menu principal")
-        campo = input("Escolha o número do campo: ")
-        if campo == "1":
-            atualizar_nome(cursor)
-        elif campo == "2":
-            atualizar_cargo(cursor)
-        elif campo == "3":
-            atualizar_salario(cursor)
-        elif campo == "4":
-            atualizar_cpf(cursor)
-        elif campo == "5":
-            atualizar_email(cursor)
-        elif campo == "6":
-            atualizar_telefone(cursor)
-        elif campo == "7":
-            atualizar_nascimento(cursor)
-        elif campo == "8":
-            atualizar_unidade(cursor)
-        elif campo == "9":
-            atualizar_todos(cursor)
-        elif campo == "0":
-            break
-        else:
-            print("Opção inválida. Tente novamente.")
-        
     print("\n-- Atualizar Funcionário --")
-    funcionario_id = int(input("ID do funcionário a ser atualizado: "))
-    nome = input("Novo nome: ")
-    cargo = input("Novo cargo: ")
-    salario = float(input("Novo salário: "))
-    cpf = input("Novo CPF: ")
-    email = input("Novo email: ")
-    telefone = input("Novo telefone: ")
-    nascimento = input("Nova data de nascimento (YYYY-MM-DD): ")
-    unidade = int(input("Novo código da unidade de trabalho: "))
-    sql = "UPDATE funcionario SET nome = %s, cargo = %s, salario = %s, cpf = %s, email = %s, telefone = %s, nascimento = %s, unidade_id = %s WHERE id = %s"
-    dados = (nome, cargo, salario, cpf, email, telefone, nascimento, unidade, funcionario_id)
-    cursor.execute(sql, dados)
-    conn.commit()
-    print("Funcionário atualizado com sucesso.")
-    cursor.close()
-    '''
+    
+    try:
+        codigo = int(input("Digite o código do funcionário a ser atualizado: "))
+        sql = "SELECT * FROM Funcionario WHERE codigo_funcionario = %s"
+        cursor.execute(sql, (codigo,))
+        funcionario = cursor.fetchone()
+
+        if not funcionario:
+            print("Funcionário não encontrado.")
+            return
+
+        print("\nFuncionário atual:")
+        print(f"Nome: {funcionario['nome']}")
+        print(f"Cargo: {funcionario['cargo']}")
+        print(f"Salário: {funcionario['salario']:.2f}")
+        print(f"CPF: {funcionario['cpf']}")
+        print(f"Email: {funcionario['email_interno']}")
+        print(f"Telefone: {funcionario['numero_telefone']}")
+        print(f"Nascimento: {funcionario['data_nascimento']}")
+        print(f"Unidade: {funcionario['unidade_de_trabalho']}")
+
+        nome = input(f"Novo nome (ENTER para manter '{funcionario['nome']}'): ") or funcionario['nome']
+        cargo = input(f"Novo cargo (ENTER para manter '{funcionario['cargo']}'): ") or funcionario['cargo']
+
+        salario_input = input(f"Novo salário (ENTER para manter '{funcionario['salario']}'): ")
+        salario = float(salario_input) if salario_input else funcionario['salario']
+
+        cpf = input(f"Novo CPF (ENTER para manter '{funcionario['cpf']}'): ") or funcionario['cpf']
+        email = input(f"Novo email interno (ENTER para manter '{funcionario['email_interno']}'): ") or funcionario['email_interno']
+        telefone = input(f"Novo telefone (ENTER para manter '{funcionario['numero_telefone']}'): ") or funcionario['numero_telefone']
+        nascimento = input(f"Nova data de nascimento (YYYY-MM-DD, ENTER para manter '{funcionario['data_nascimento']}'): ") or funcionario['data_nascimento']
+
+        unidade_input = input(f"Nova unidade (ENTER para manter '{funcionario['unidade_de_trabalho']}'): ")
+        unidade = int(unidade_input) if unidade_input else funcionario['unidade_de_trabalho']
+
+        sql_update = """
+        UPDATE Funcionario
+        SET nome = %s, cargo = %s, salario = %s, cpf = %s, email_interno = %s,
+            numero_telefone = %s, data_nascimento = %s, unidade_de_trabalho = %s
+        WHERE codigo_funcionario = %s
+        """
+
+        dados = (nome, cargo, salario, cpf, email, telefone, nascimento, unidade, codigo)
+
+        cursor.execute(sql_update, dados)
+        conn.commit()
+
+        print("Funcionário atualizado com sucesso!")
+
+    except ValueError:
+        print("Entrada inválida. Certifique-se de digitar valores corretos.")
+    except mysql.connector.Error as err:
+        print(f"Erro ao atualizar funcionário: {err}")
+
 
 def deletar_funcionario():
     cursor = conn.cursor()
@@ -298,35 +315,49 @@ def deletar_funcionario():
     cursor.close()
 
 
-def inserir_medicamento(): 
+def inserir_medicamento():
     cursor = conn.cursor()
     print("\n-- Inserir Medicamento --")
-    nome = input("Nome: ")
-    descricao = input("Descricao: ")
-    laboratorio = input("Laboratorio: ")
-    preco = input("Preco: ")
-    qtde_estoque = input("Quantidade em estoque: ")
-    sql = dados = (nome, descricao, laboratorio, preco, qtde_estoque)
-    cursor.execute(sql, dados)
-    conn.commit()
-    print("Medicamento inserido com sucesso. ID gerado:", cursor.lastrowid)
+
+    nome = input("Nome do medicamento: ")
+    descricao = input("Descrição: ")
+    laboratorio = input("Laboratório: ")
+    preco = float(input("Preço (ex: 19.99): "))
+    qtde_estoque = int(input("Quantidade em estoque (ex: 1 ou 55): "))
+            
+
+    sql = """
+    INSERT INTO Medicamento (nome, descricao, laboratorio, preco, qtde_estoque)
+    VALUES (%s, %s, %s, %s, %s)
+    """
+
+    dados = (nome, descricao, laboratorio, preco, qtde_estoque)
+
+    try:
+        cursor.execute(sql, dados)
+        conn.commit()
+        print("Medicamento inserido com sucesso. Código:", cursor.lastrowid)
+    except mysql.connector.Error as err:
+        print(f"Erro ao inserir medicamento: {err}")
+
     cursor.close()
+
 
 def consultar_medicamento():
     cursor = conn.cursor()
     
     print("\n-- Consultar Medicamento --")
-    codigo = int(input("ID do medicamento a ser atualizado: "))
+    codigo = int(input("ID do medicamento a ser consultado: "))
     sql = "SELECT * FROM Medicamento WHERE codigo_medicamento = %s"
     cursor.execute(sql, (codigo,))
     resultado = cursor.fetchone()  
 
     if resultado:
-        print("\nInformações do Funcionário:")
+        print("\nInformações do Medicamento:")
         print(f"Código: {resultado[0]}")
         print(f"Nome: {resultado[1]}")
         print(f"Descrição: {resultado[2]}")
-        print(f"Laboratorio: {resultado[3]:.2f}")
+        print(f"Laboratorio: {resultado[3]}")
         print(f"Preço: R$ {resultado[4]}")
         print(f"Quantidade no estoque: {resultado[5]}")
     else:
@@ -348,8 +379,41 @@ def listar_medicamentos():
             print(f"Laboratorio: {medicamento[3]}")
             print(f"Preço: R$ {medicamento[4]:.2f}")
             print(f"Quantidade no estoque: {medicamento[5]}")
-        else:
-            print("Nenhum medicamento encontrado.")
+    else:
+         print("Nenhum medicamento encontrado.")
+
+def atualizar_estoque_medicamento():
+    print("\n-- Atualizar Estoque de Medicamento --")
+
+    try:
+        codigo = int(input("Digite o código do medicamento: "))
+        cursor = conn.cursor()
+        sql_select = "SELECT nome, qtde_estoque FROM Medicamento WHERE codigo_medicamento = %s"
+        cursor.execute(sql_select, (codigo,))
+        medicamento = cursor.fetchone()
+
+        if not medicamento:
+            print("Medicamento não encontrado.")
+            return
+
+        print(f"Medicamento: {medicamento[0]}")
+        print(f"Estoque atual: {medicamento[1]}")
+        nova_qtde = int(input("Nova quantidade em estoque: "))
+           
+
+        sql_update = "UPDATE Medicamento SET qtde_estoque = %s WHERE codigo_medicamento = %s"
+        cursor.execute(sql_update, (nova_qtde, codigo))
+        conn.commit()
+
+        print("Estoque atualizado com sucesso!")
+
+    except ValueError:
+        print("Código inválido.")
+    except mysql.connector.Error as err:
+        print(f"Erro ao atualizar o estoque: {err}")
+
+    cursor.close()
+
 
 def deletar_medicamento():
     cursor = conn.cursor()
@@ -380,7 +444,6 @@ def inserir_entrega_medicamentos():
     funcionario = int(input("Código do funcionário responsável: "))
     unidade = int(input("Código da unidade responsável: "))
 
-    # Inserindo a entrega
     sql_entrega = """
     INSERT INTO Entrega (
         nome_destinatario, endereco_destinatario, telefone_destinatario,
@@ -395,7 +458,7 @@ def inserir_entrega_medicamentos():
     id_entrega = cursor.lastrowid
     print(f"\nEntrega inserida com sucesso! Código gerado: {id_entrega}")
 
-    # Loop para adicionar medicamentos à entrega
+
     while True:
         print("\n-- Vincular medicamento à entrega --")
         codigo_medicamento = int(input("Código do medicamento: "))
@@ -418,25 +481,63 @@ def inserir_entrega_medicamentos():
     cursor.close()
 
 def consultar_entrega():
-    cursor = conn.cursor()
     print("\n-- Consultar Entrega --")
-    codigo = int(input("Digite o código da entrega: "))
-    cursor.execute("SELECT * FROM Entrega WHERE codigo_entrega = %s", (codigo,))
-    entrega = cursor.fetchone()
+    try:
+        codigo = int(input("Digite o código da entrega: "))
+        
+        cursor = conn.cursor(dictionary=True)
 
-    if entrega:
-        for chave, valor in entrega.items():
-            print(f"{chave}: {valor}")
-    else:
-        print("Entrega não encontrada.")
+        cursor.execute("SELECT * FROM Entrega WHERE codigo_entrega = %s", (codigo,))
+        entrega = cursor.fetchone()
 
-    cursor.close()
+        if not entrega:
+            print("Entrega não encontrada.")
+            return
+
+        print(f"\nCódigo da entrega: {entrega['codigo_entrega']}")
+        print(f"Destinatário: {entrega['nome_destinatario']}")
+        print(f"Endereço: {entrega['endereco_destinatario']}")
+        print(f"Telefone: {entrega['telefone_destinatario']}")
+        print(f"Total da compra: R$ {entrega['total_compra']:.2f}")
+        print(f"Status: {entrega['status']}")
+        print(f"Data do pedido gerado: {entrega['data_pedido_gerado']}")
+        print(f"Data de saída: {entrega['data_pedido_entregue']}")
+        
+        if entrega['data_pedido_entregue']:
+            print(f"Data de entrega: {entrega['data_pedido_entregue']}")
+        else:
+            print("Data de entrega: Pendente")
+
+        print(f"Funcionário responsável (ID): {entrega['funcionario_responsavel']}")
+        print(f"Unidade responsável (ID): {entrega['unidade_responsavel']}")
+
+        cursor.execute("""
+            SELECT me.quantidade, m.nome
+            FROM Medicamento_Entrega me
+            JOIN Medicamento m ON me.codigo_medicamento = m.codigo_medicamento
+            WHERE me.codigo_entrega = %s
+        """, (codigo,))
+        medicamentos = cursor.fetchall()
+
+        if medicamentos:
+            print("\nMedicamentos:")
+            for med in medicamentos:
+                print(f" - {med['nome']} (Quantidade: {med['quantidade']})")
+        else:
+            print("\nNenhum medicamento registrado nesta entrega.")
+
+        cursor.close()
+
+    except ValueError:
+        print("Código inválido.")
+    except mysql.connector.Error as err:
+        print(f"Erro ao consultar entrega: {err}")
+
 
 def listar_entregas():
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)  # <-- aqui!
     print("\n-- Lista de Entregas com Medicamentos --")
     
-    # Consulta todas as entregas
     cursor.execute("SELECT * FROM Entrega")
     entregas = cursor.fetchall()
 
@@ -453,12 +554,13 @@ def listar_entregas():
         print(f"Total da compra: R$ {entrega['total_compra']:.2f}")
         print(f"Status: {entrega['status']}")
         print(f"Data do pedido gerado: {entrega['data_pedido_gerado']}")
-        print(f"Data de saída: {entrega['data_pedido_saida']}")
-        print(f"Data de entrega: {entrega['data_pedido_entregue']}")
+        if entrega['data_pedido_entregue']:
+            print(f"Data de entrega: {entrega['data_pedido_entregue']}")
+        else:
+            print("Data de entrega: Pendente")
         print(f"Funcionário responsável (ID): {entrega['funcionario_responsavel']}")
         print(f"Unidade responsável (ID): {entrega['unidade_responsavel']}")
 
-        # Consulta os medicamentos dessa entrega
         cursor.execute("""
             SELECT me.quantidade, m.nome
             FROM Medicamento_Entrega me
@@ -473,18 +575,20 @@ def listar_entregas():
                 print(f"   - {med['nome']} (Quantidade: {med['quantidade']})")
         else:
             print("  Nenhum medicamento registrado nesta entrega.")
+    
     cursor.close()
+
 
 def atualizar_status_entrega():
     cursor = conn.cursor()
-    print
+    print("\n-- Atualizar Status de Entrega --")
     codigo = int(input("\nDigite o código da entrega a ser atualizada: "))
     novo_status = input("\nDigite o novo status: ")
     if novo_status == "entregue":
         print("\nA entrega foi marcada como entregue.")
         print("\nInforme a data de entrega (YYYY-MM-DD HH:MM:SS): ")
-        data_entrega = input()
-        cursor.execute("UPDATE Entrega SET status = %s, data_entrega = %s WHERE codigo_entrega = %s", (novo_status, data_entrega, codigo))
+        data_pedido_entregue = input()
+        cursor.execute("UPDATE Entrega SET status = %s, data_pedido_entregue = %s WHERE codigo_entrega = %s", (novo_status, data_pedido_entregue, codigo))
     elif novo_status == "cancelada":
         print("\nA entrega foi cancelada.")
         cursor.execute("UPDATE Entrega SET status = %s, WHERE codigo_entrega = %s", (novo_status, codigo))
@@ -496,19 +600,22 @@ def atualizar_status_entrega():
 
 def deletar_entrega():
     cursor = conn.cursor()
-    codigo = int(input("Digite o código da entrega a ser deletada: "))
-    cursor.execute("SELECT * FROM Entrega WHERE codigo_entrega = %s", (codigo,))
-
     print("\n-- Deletar Entrega --")
 
-    entrega = cursor.fetchone()
+    try:
+        codigo = int(input("Digite o código da entrega que deseja deletar: "))
 
-    if entrega:
+        cursor.execute("DELETE FROM Medicamento_Entrega WHERE codigo_entrega = %s", (codigo,))
+
         cursor.execute("DELETE FROM Entrega WHERE codigo_entrega = %s", (codigo,))
         conn.commit()
-        print("Entrega deletada com sucesso.")
-    else:
-        print("Entrega não encontrada.")
+
+        print("Entrega deletada com sucesso!")
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao deletar entrega: {err}")
+    except ValueError:
+        print("Código inválido.")
 
     cursor.close()
 
@@ -546,7 +653,7 @@ def listar_unidades():
 
     if unidades:
         for u in unidades:
-            print(f"\nCódigo: {u['codigo_unidade']}, Endereço: {u['endereco']}, CEP: {u['cep']}")
+             print(f"\nCódigo: {u[0]}, Endereço: {u[1]}, CEP: {u[2]}")
     else:
         print("Nenhuma unidade encontrada.")
 
